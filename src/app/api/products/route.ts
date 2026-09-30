@@ -3,7 +3,7 @@ import { connectDB } from "@/lib/mongodb";
 import Product from "@/models/Product";
 import Category from "@/models/Category";
 import Subcategory from "@/models/Subcategory";
-import cloudinary from "@/lib/cloudinary";
+import { saveBase64Image } from "@/lib/storage";
 import { auth } from "@/auth";
 import mongoose from "mongoose";
 
@@ -124,18 +124,14 @@ export async function POST(req: NextRequest) {
     const body = await req.json();
 
     const uploadImage = async (imgData: string) => {
-      // Don't upload if imgData is not a base64 string
-      if (!imgData || !imgData.startsWith("data:image")) return null;
-      try {
-        const uploaded = await cloudinary.uploader.upload(imgData, {
-          folder: "products",
-          quality: "auto:low",
-        });
-        return { public_id: uploaded.public_id, url: uploaded.secure_url };
-      } catch (err) {
-        console.error("Image upload error:", err);
-        return null;
+      if (!imgData) return null;
+      if (typeof imgData === "string" && imgData.startsWith("data:image")) {
+        return await saveBase64Image(imgData, "products");
       }
+      if (typeof imgData === "string") {
+        return { public_id: "prod_img", url: imgData };
+      }
+      return imgData;
     };
 
     // This part processes new base64 image strings for upload

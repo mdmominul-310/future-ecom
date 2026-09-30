@@ -1,11 +1,11 @@
 import { NextResponse } from "next/server";
-import { writeFile, mkdir } from "fs/promises";
-import path from "path";
+import { saveBufferImage } from "@/lib/storage";
 
 export async function POST(request: Request) {
   try {
     const formData = await request.formData();
     const file = formData.get("file") as File | null;
+    const folder = (formData.get("folder") as string) || "general";
 
     if (!file) {
       return NextResponse.json(
@@ -17,25 +17,13 @@ export async function POST(request: Request) {
     const bytes = await file.arrayBuffer();
     const buffer = Buffer.from(bytes);
 
-    // Prepare uploads directory in public/
-    const uploadDir = path.join(process.cwd(), "public", "uploads");
-    await mkdir(uploadDir, { recursive: true });
-
-    // Clean and generate unique file name
-    const timestamp = Date.now();
-    const originalName = file.name.replace(/[^a-zA-Z0-9.-]/g, "_");
-    const filename = `${timestamp}_${originalName}`;
-    const filePath = path.join(uploadDir, filename);
-
-    // Save to disk
-    await writeFile(filePath, buffer);
-
-    const publicUrl = `/uploads/${filename}`;
+    const result = await saveBufferImage(buffer, file.name, folder);
 
     return NextResponse.json({
       success: true,
-      url: publicUrl,
-      filename,
+      url: result.url,
+      public_id: result.public_id,
+      filename: result.public_id,
     });
   } catch (error: any) {
     console.error("Local file upload error:", error);

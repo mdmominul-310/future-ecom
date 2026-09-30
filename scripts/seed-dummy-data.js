@@ -1,4 +1,6 @@
 const mongoose = require('mongoose');
+const fs = require('fs');
+const path = require('path');
 
 const MONGODB_URI = process.env.MONGODB_URI || 'mongodb+srv://mdmominulislam310_db_user:AyAkXX6zXNysxqYy@cluster0.n9zqo1n.mongodb.net/ecom?retryWrites=true&w=majority';
 
@@ -863,11 +865,16 @@ async function seedData() {
     const subcategoryMap = {};
 
     for (const cat of categoriesSeed) {
+      const localCatFile = path.join(process.cwd(), 'public', 'uploads', 'categories', `${cat.slug}.jpg`);
+      const catImage = fs.existsSync(localCatFile)
+        ? { public_id: `${cat.slug}.jpg`, url: `/uploads/categories/${cat.slug}.jpg` }
+        : cat.image;
+
       const createdCat = await Category.create({
         name: cat.name,
         slug: cat.slug,
         description: cat.description,
-        image: cat.image,
+        image: catImage,
         subcategories: []
       });
       categoryDocsMap[cat.name] = createdCat;
@@ -902,6 +909,10 @@ async function seedData() {
       const slug = p.name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '') + '-' + (1000 + count);
       const discountPercent = Math.round(((p.price - p.salePrice) / p.price) * 100);
 
+      const localProdFile = path.join(process.cwd(), 'public', 'uploads', 'products', `${slug}.jpg`);
+      const prodUrl = fs.existsSync(localProdFile) ? `/uploads/products/${slug}.jpg` : p.img;
+      const prodImages = [{ public_id: `${slug}.jpg`, url: prodUrl }];
+
       const prod = await Product.create({
         name: p.name,
         description: p.desc,
@@ -923,8 +934,8 @@ async function seedData() {
         returnPolicy: '7 Days Return Policy',
         videoUrl: '',
         tags: [p.cat, p.sub, p.brand, 'trending', 'popular'],
-        images: [{ public_id: `img_${count}`, url: p.img }],
-        additionalImages: [{ public_id: `img_add_${count}`, url: p.img }],
+        images: prodImages,
+        additionalImages: prodImages,
         specifications: [
           { name: 'Brand', value: p.brand },
           { name: 'Condition', value: 'Brand New' }
@@ -955,7 +966,12 @@ async function seedData() {
         title: 'Summer Fashion Sale 2026',
         subtitle: 'Up to 50% Off on New Arrivals',
         description: 'Explore premium leather jacket collections, designer footwear, and modern summer streetwear.',
-        image: { public_id: 'hero_1', url: 'https://images.unsplash.com/photo-1441986300917-64674bd600d8?auto=format&fit=crop&w=1600&q=80' },
+        image: {
+          public_id: 'hero-slide-1.jpg',
+          url: fs.existsSync(path.join(process.cwd(), 'public', 'uploads', 'banners', 'hero-slide-1.jpg'))
+            ? '/uploads/banners/hero-slide-1.jpg'
+            : 'https://images.unsplash.com/photo-1441986300917-64674bd600d8?auto=format&fit=crop&w=1600&q=80'
+        },
         url: `/products`,
         linkType: 'category',
         linkedId: categoryDocsMap['Fashion & Apparel']._id.toString()
@@ -964,7 +980,12 @@ async function seedData() {
         title: 'Next-Gen Audio Experience',
         subtitle: 'Immerse Yourself in Pure Sound',
         description: 'Discover studio-quality active noise-canceling headphones with 30-hour battery life.',
-        image: { public_id: 'hero_2', url: 'https://images.unsplash.com/photo-1505740420928-5e560c06d30e?auto=format&fit=crop&w=1600&q=80' },
+        image: {
+          public_id: 'hero-slide-2.jpg',
+          url: fs.existsSync(path.join(process.cwd(), 'public', 'uploads', 'banners', 'hero-slide-2.jpg'))
+            ? '/uploads/banners/hero-slide-2.jpg'
+            : 'https://images.unsplash.com/photo-1505740420928-5e560c06d30e?auto=format&fit=crop&w=1600&q=80'
+        },
         url: `/products/${createdProducts[0]._id}`,
         linkType: 'product',
         linkedId: createdProducts[0]._id.toString()
@@ -992,21 +1013,36 @@ async function seedData() {
       {
         title: 'Top 10 Essential Tech Gadgets for Modern Workspaces in 2026',
         content: `<p>Upgrading your workspace with ergonomic gadgets can dramatically improve productivity and comfort. From noise-canceling headphones to mechanical keyboards, here are our top recommendations.</p><h3>1. Active Noise Canceling Headphones</h3><p>Blocking out ambient noise allows deep focus during coding or designing sessions.</p><h3>2. Ergonomic Mechanical Keyboards</h3><p>Custom tactile switches reduce wrist strain and provide satisfying feedback.</p>`,
-        imageUrl: { public_id: 'blog_1', url: 'https://images.unsplash.com/photo-1498049794561-7780e7231661?auto=format&fit=crop&w=800&q=80' },
+        imageUrl: {
+          public_id: 'top-10-essential-tech-gadgets-2026.jpg',
+          url: fs.existsSync(path.join(process.cwd(), 'public', 'uploads', 'blogs', 'top-10-essential-tech-gadgets-2026.jpg'))
+            ? '/uploads/blogs/top-10-essential-tech-gadgets-2026.jpg'
+            : 'https://images.unsplash.com/photo-1498049794561-7780e7231661?auto=format&fit=crop&w=800&q=80'
+        },
         slug: 'top-10-essential-tech-gadgets-2026',
         status: 'published'
       },
       {
         title: 'The Ultimate Guide to Skincare: Hyaluronic Acid Explained',
         content: `<p>Hyaluronic acid is a miracle ingredient capable of holding up to 1000 times its weight in water. Learn how to incorporate serums into your daily routine for radiant, hydrated skin.</p>`,
-        imageUrl: { public_id: 'blog_2', url: 'https://images.unsplash.com/photo-1522337360788-8b13dee7a37e?auto=format&fit=crop&w=800&q=80' },
+        imageUrl: {
+          public_id: 'ultimate-guide-to-skincare-hyaluronic-acid.jpg',
+          url: fs.existsSync(path.join(process.cwd(), 'public', 'uploads', 'blogs', 'ultimate-guide-to-skincare-hyaluronic-acid.jpg'))
+            ? '/uploads/blogs/ultimate-guide-to-skincare-hyaluronic-acid.jpg'
+            : 'https://images.unsplash.com/photo-1522337360788-8b13dee7a37e?auto=format&fit=crop&w=800&q=80'
+        },
         slug: 'ultimate-guide-to-skincare-hyaluronic-acid',
         status: 'published'
       },
       {
         title: 'Designing a Cozy Scandinavian Home: Tips & Trends',
         content: `<p>Scandinavian interior design focuses on minimalism, clean lines, and natural wood elements. Discover how simple oak furniture and warm lighting can transform your living space.</p>`,
-        imageUrl: { public_id: 'blog_3', url: 'https://images.unsplash.com/photo-1616486338812-3dadae4b4ace?auto=format&fit=crop&w=800&q=80' },
+        imageUrl: {
+          public_id: 'designing-a-cozy-scandinavian-home.jpg',
+          url: fs.existsSync(path.join(process.cwd(), 'public', 'uploads', 'blogs', 'designing-a-cozy-scandinavian-home.jpg'))
+            ? '/uploads/blogs/designing-a-cozy-scandinavian-home.jpg'
+            : 'https://images.unsplash.com/photo-1616486338812-3dadae4b4ace?auto=format&fit=crop&w=800&q=80'
+        },
         slug: 'designing-a-cozy-scandinavian-home',
         status: 'published'
       }

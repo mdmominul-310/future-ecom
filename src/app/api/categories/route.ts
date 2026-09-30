@@ -1,7 +1,7 @@
 import { auth } from "@/auth";
 import { connectDB } from "@/lib/mongodb";
 import Category from "@/models/Category";
-import cloudinary from "@/lib/cloudinary";
+import { saveBase64Image } from "@/lib/storage";
 import slugify from "slugify";
 import { NextRequest, NextResponse } from "next/server";
 
@@ -24,10 +24,10 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const uploadedResponse = await cloudinary.uploader.upload(image, {
-      folder: "categories",
-      quality: "auto:low",
-    });
+    const uploadedResponse = (await saveBase64Image(image, "categories")) || {
+      public_id: "cat_img",
+      url: image,
+    };
 
     // ✔️ FIX: Added the 'remove' option to preserve Bangla characters.
     const slug = slugify(trimmedName, {
@@ -48,7 +48,7 @@ export async function POST(req: NextRequest) {
       description,
       image: {
         public_id: uploadedResponse.public_id,
-        url: uploadedResponse.secure_url,
+        url: uploadedResponse.url,
       },
     });
 

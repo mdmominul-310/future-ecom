@@ -4,7 +4,7 @@ import Product from "@/models/Product";
 import Category from "@/models/Category";
 import Subcategory from "@/models/Subcategory";
 import mongoose from "mongoose";
-import cloudinary from "@/lib/cloudinary";
+import { saveBase64Image, deleteLocalImage } from "@/lib/storage";
 
 // GET /api/products/[id] - Get a single product
 export async function GET(
@@ -102,76 +102,44 @@ export async function PUT(
       }
     }
 
-    // Handle images - upload new ones to Cloudinary
+    // Handle images - upload new ones to local storage
     if (body.images && Array.isArray(body.images)) {
-      const mainImagesPromises = body.images.map(async (image: any) => {
-        // If it's already a Cloudinary object with a url, keep it as is
-        if (typeof image === "object" && image.url) {
-          return image;
-        }
+       const mainImagesPromises = body.images.map(async (image: any) => {
+         if (typeof image === "object" && image.url) {
+           return image;
+         }
+         try {
+           return await saveBase64Image(image, "products");
+         } catch (error) {
+           console.error("Error uploading image locally:", error);
+           return null;
+         }
+       });
 
-        // Otherwise, upload to Cloudinary
-        try {
-          const uploadedResponse = await cloudinary.uploader.upload(image, {
-            folder: "products/main",
-            quality: "auto:low",
-          });
+       const mainImagesResults = await Promise.all(mainImagesPromises);
+       body.images = mainImagesResults.filter(Boolean);
+     }
 
-          return {
-            public_id: uploadedResponse.public_id,
-            url: uploadedResponse.secure_url,
-          };
-        } catch (error) {
-          console.error("Error uploading image:", error);
-          return null;
-        }
-      });
-
-      // Wait for all uploads to complete
-      const mainImagesResults = await Promise.all(mainImagesPromises);
-      body.images = mainImagesResults.filter(Boolean);
-
-      // For detailed debugging
-      console.log(
-        "Images before update:",
-        typeof body.images,
-        Array.isArray(body.images),
-        body.images
-      );
-    }
-
-    // Handle additional images - upload new ones to Cloudinary
+    // Handle additional images - upload new ones to local storage
     if (body.additionalImages && Array.isArray(body.additionalImages)) {
-      const additionalImagesPromises = body.additionalImages.map(
-        async (image: any) => {
-          // If it's already a Cloudinary object with a url, keep it as is
-          if (typeof image === "object" && image.url) {
-            return image;
-          }
+       const additionalImagesPromises = body.additionalImages.map(
+         async (image: any) => {
+           if (typeof image === "object" && image.url) {
+             return image;
+           }
+           try {
+             return await saveBase64Image(image, "products");
+           } catch (error) {
+             console.error("Error uploading additional image locally:", error);
+             return null;
+           }
+         }
+       );
 
-          // Otherwise, upload to Cloudinary
-          try {
-            const uploadedResponse = await cloudinary.uploader.upload(image, {
-              folder: "products/additional",
-              quality: "auto:good",
-            });
-
-            return {
-              public_id: uploadedResponse.public_id,
-              url: uploadedResponse.secure_url,
-            };
-          } catch (error) {
-            console.error("Error uploading additional image:", error);
-            return null;
-          }
-        }
-      );
-
-      // Wait for all uploads to complete
-      const additionalImagesResults = await Promise.all(
-        additionalImagesPromises
-      );
-      body.additionalImages = additionalImagesResults.filter(Boolean);
+       const additionalImagesResults = await Promise.all(
+         additionalImagesPromises
+       );
+       body.additionalImages = additionalImagesResults.filter(Boolean);
 
       // For detailed debugging
       console.log(
@@ -245,14 +213,13 @@ export async function DELETE(
       );
     }
 
-    // Delete main images from Cloudinary
+    // Delete local images
     const mainImageDeletes = product.images?.map((img: any) =>
-      cloudinary.uploader.destroy(img.public_id)
+      deleteLocalImage(img.public_id || img.url)
     );
 
-    // Delete additional images from Cloudinary
     const additionalImageDeletes = product.additionalImages?.map((img: any) =>
-      cloudinary.uploader.destroy(img.public_id)
+      deleteLocalImage(img.public_id || img.url)
     );
 
     // Wait for all deletions
