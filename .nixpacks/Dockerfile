@@ -1,0 +1,34 @@
+FROM ghcr.io/railwayapp/nixpacks:ubuntu-1745885067
+
+ENTRYPOINT ["/bin/bash", "-l", "-c"]
+WORKDIR /app/
+
+
+COPY .nixpacks/nixpkgs-ffeebf0acf3ae8b29f8c7049cd911b9636efd7e7.nix .nixpacks/nixpkgs-ffeebf0acf3ae8b29f8c7049cd911b9636efd7e7.nix
+RUN nix-env -if .nixpacks/nixpkgs-ffeebf0acf3ae8b29f8c7049cd911b9636efd7e7.nix && nix-collect-garbage -d
+RUN sudo apt-get update && sudo apt-get install -y --no-install-recommends curl wget
+
+ARG AUTH_SECRET CI CLOUDINARY_API_KEY CLOUDINARY_API_SECRET CLOUDINARY_CLOUD_NAME COOLIFY_BRANCH COOLIFY_FQDN COOLIFY_RESOURCE_UUID COOLIFY_URL EMAIL_PASSWORD EMAIL_USERNAME JWT_SECRET MONGODB_URI NEXT_PUBLIC_API_URL NEXT_PUBLIC_BASE_URL NEXT_PUBLIC_GTM_ID NIXPACKS_METADATA NIXPACKS_NODE_VERSION NODE_ENV NPM_CONFIG_PRODUCTION
+ENV AUTH_SECRET=$AUTH_SECRET CI=$CI CLOUDINARY_API_KEY=$CLOUDINARY_API_KEY CLOUDINARY_API_SECRET=$CLOUDINARY_API_SECRET CLOUDINARY_CLOUD_NAME=$CLOUDINARY_CLOUD_NAME COOLIFY_BRANCH=$COOLIFY_BRANCH COOLIFY_FQDN=$COOLIFY_FQDN COOLIFY_RESOURCE_UUID=$COOLIFY_RESOURCE_UUID COOLIFY_URL=$COOLIFY_URL EMAIL_PASSWORD=$EMAIL_PASSWORD EMAIL_USERNAME=$EMAIL_USERNAME JWT_SECRET=$JWT_SECRET MONGODB_URI=$MONGODB_URI NEXT_PUBLIC_API_URL=$NEXT_PUBLIC_API_URL NEXT_PUBLIC_BASE_URL=$NEXT_PUBLIC_BASE_URL NEXT_PUBLIC_GTM_ID=$NEXT_PUBLIC_GTM_ID NIXPACKS_METADATA=$NIXPACKS_METADATA NIXPACKS_NODE_VERSION=$NIXPACKS_NODE_VERSION NODE_ENV=$NODE_ENV NPM_CONFIG_PRODUCTION=$NPM_CONFIG_PRODUCTION
+
+# setup phase
+# noop
+
+# install phase
+ENV NIXPACKS_PATH=/app/node_modules/.bin:$NIXPACKS_PATH
+COPY . /app/.
+RUN --mount=type=cache,id=hcg00e87l756en5xxidqg1gp-/root/npm,target=/root/.npm npm install --legacy-peer-deps
+
+# build phase
+COPY . /app/.
+RUN --mount=type=cache,id=hcg00e87l756en5xxidqg1gp-next/cache,target=/app/.next/cache --mount=type=cache,id=hcg00e87l756en5xxidqg1gp-node_modules/cache,target=/app/node_modules/.cache npm run build
+
+
+RUN printf '\nPATH=/app/node_modules/.bin:$PATH' >> /root/.profile
+
+
+# start
+COPY . /app
+
+CMD ["npm run start"]
+

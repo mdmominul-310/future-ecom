@@ -1,0 +1,9 @@
+Category Card:
+1:1 (square) or 4:3 aspect ratio is usually a good starting point for category cards. 
+Any square image will work perfectly. Here are some common pixel-for-pixel examples:
+500px by 500px
+800px by 800px
+1080px by 1080px
+
+product card image: 
+Aspect Ratio: 1:1 (Square).
