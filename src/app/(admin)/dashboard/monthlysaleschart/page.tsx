@@ -177,7 +177,7 @@ export default function MonthlySalesChart() {
           {loading ? (
             <div className="flex flex-col justify-between h-[480px] w-full animate-pulse py-4">
               <div className="flex justify-between items-end h-full px-2">
-                {[...Array(12)].map((_, i) => (
+                {[85, 120, 60, 140, 75, 110, 95, 130, 70, 150, 100, 125].map((barHeight, i) => (
                   <div
                     key={i}
                     className="flex flex-col items-center justify-end space-y-1 w-full"
@@ -185,7 +185,7 @@ export default function MonthlySalesChart() {
                     <div
                       className="w-6 bg-gray-200 dark:bg-gray-700 rounded"
                       style={{
-                        height: `${Math.floor(Math.random() * 150) + 40}px`, // simulate different bar heights
+                        height: `${barHeight}px`,
                       }}
                     ></div>
                     <div className="h-4 w-6 bg-gray-200 dark:bg-gray-700 rounded"></div>

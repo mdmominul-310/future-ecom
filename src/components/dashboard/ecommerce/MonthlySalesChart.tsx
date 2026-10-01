@@ -219,16 +219,16 @@ export default function MonthlySalesChart() {
           {loading ? (
             <div className="flex flex-col space-y-2 h-[180px] w-full">
               <div className="flex justify-between items-end mt-4">
-                {/* Skeleton bars for the chart */}
-                {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12].map((item) => (
+                {/* Skeleton bars for the chart with deterministic heights to prevent hydration error */}
+                {[65, 42, 85, 30, 95, 55, 75, 48, 90, 60, 80, 50].map((barHeight, idx) => (
                   <div
-                    key={item}
+                    key={idx}
                     className="flex flex-col items-center space-y-1 w-full"
                   >
                     <div
                       className="bg-gray-200 dark:bg-gray-700 rounded-t-sm animate-pulse w-8"
                       style={{
-                        height: `${Math.floor(Math.random() * 100) + 20}px`,
+                        height: `${barHeight}px`,
                       }}
                     ></div>
                     <div className="h-4 w-8 bg-gray-200 dark:bg-gray-700 animate-pulse rounded"></div>

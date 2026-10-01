@@ -38,9 +38,17 @@ function CampaignBannerContent({ banner }: { banner: ICampaignBanner }) {
     };
   }, [targetDate]);
 
-  const [timeLeft, setTimeLeft] = useState(calculateTimeLeft());
+  const [mounted, setMounted] = useState(false);
+  const [timeLeft, setTimeLeft] = useState({
+    days: 0,
+    hours: 0,
+    minutes: 0,
+    seconds: 0,
+  });
 
   useEffect(() => {
+    setMounted(true);
+    setTimeLeft(calculateTimeLeft());
     const timer = setInterval(() => {
       setTimeLeft(calculateTimeLeft());
     }, 1000);
@@ -199,7 +207,10 @@ export default function CampaignLargeBanner({
 function CountdownCard({ label, value }: { label: string; value: number }) {
   return (
     <div className="relative group overflow-hidden rounded-2xl bg-white border border-stone-200/80 py-3 sm:py-4 px-2 text-center shadow-md hover:border-orange-500/50 hover:shadow-lg transition-all">
-      <div className="text-2xl sm:text-4xl font-black text-stone-900 tracking-tight">
+      <div
+        className="text-2xl sm:text-4xl font-black text-stone-900 tracking-tight"
+        suppressHydrationWarning
+      >
         {String(value).padStart(2, "0")}
       </div>
       <div className="text-[10px] sm:text-xs font-extrabold uppercase tracking-wider text-orange-600 mt-0.5">
